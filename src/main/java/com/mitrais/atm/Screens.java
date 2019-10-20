@@ -153,7 +153,6 @@ public class Screens {
             } catch (InsufficientBalanceException e) {
                 // insufficient balance
                 System.out.println("Insufficient balance $" + fTransferAmount);
-                e.printStackTrace();
             }
         }
     }
