@@ -43,7 +43,13 @@ public class SetupData {
         acc.setBalance(acc.getBalance() - amount);
     }
 
-    public Account getAccountByAccountNumber(int accountNumber){
+    public void creditBalance(int accountNumber, float amount) {
+        int accountPosition = getAccountPosition(accountNumber);
+        Account acc = accountList.get(accountPosition);
+        acc.setBalance(acc.getBalance() + amount);
+    }
+
+    public Account getAccountByAccountNumber(int accountNumber) {
         for (Account acc : accountList) {
             if (acc.getAccountNumber() == accountNumber) {
                 // return correct id
