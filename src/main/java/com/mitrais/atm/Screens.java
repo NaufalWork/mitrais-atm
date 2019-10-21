@@ -8,27 +8,29 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Scanner;
 
-public class Screens {
+class Screens {
     private SetupData setupData;
     private Account activeAccount;
 
-    public Screens(SetupData setupData) {
+    Screens(SetupData setupData) {
         this.setupData = setupData;
     }
 
-    public void showAuthScreen() {
+    void showAuthScreen() {
         Scanner scanner1 = new Scanner(System.in);
 
+        System.out.println("\n----------\n");
+        System.out.println("Welcome To National Bank\n");
         System.out.print("Enter Account Number: ");
         String userAccountNumber = Utils.checkBlankInputString(scanner1);
 
-        if (!Utils.isNumeric(userAccountNumber)) {
-            System.out.println(Errors.ACCOUNT_ONLY_NUMBER);
+        if (userAccountNumber.equals("") || !Utils.has6digit(userAccountNumber)) {
+            System.out.println(Errors.ACCOUNT_6_DIGIT);
             showAuthScreen();
         }
 
-        if (userAccountNumber.equals("") || !Utils.has6digit(userAccountNumber)) {
-            System.out.println(Errors.ACCOUNT_6_DIGIT);
+        if (!Utils.isNumeric(userAccountNumber)) {
+            System.out.println(Errors.ACCOUNT_ONLY_NUMBER);
             showAuthScreen();
         }
 
@@ -58,7 +60,7 @@ public class Screens {
         }
     }
 
-    public void showTransactionScreen() {
+    private void showTransactionScreen() {
         System.out.println("\n----------\n");
         System.out.println("1. Withdraw");
         System.out.println("2. Fund Transfer");
@@ -68,19 +70,26 @@ public class Screens {
         Scanner transactionScanner = new Scanner(System.in);
         String transactionChoice = Utils.checkBlankInputString(transactionScanner);
 
-        if (transactionChoice.equals("") || transactionChoice.equals("3")) {
-            showAuthScreen();
-        } else if (transactionChoice.equals("1")) {
-            showWithdrawScreen();
-        } else if (transactionChoice.equals("2")) {
-            showTransferScreen();
-        } else {
-            showTransactionScreen();
+        switch (transactionChoice) {
+            case "":
+            case "3":
+                showAuthScreen();
+                break;
+            case "1":
+                showWithdrawScreen();
+                break;
+            case "2":
+                showTransferScreen();
+                break;
+            default:
+                showTransactionScreen();
+                break;
         }
     }
 
-    public void showWithdrawScreen() {
+    private void showWithdrawScreen() {
         System.out.println("\n----------\n");
+        System.out.println("Withdrawal\n");
         System.out.println("1. $10");
         System.out.println("2. $50");
         System.out.println("3. $100");
@@ -93,19 +102,26 @@ public class Screens {
         String withdrawChoice = Utils.checkBlankInputString(withdrawScanner);
 
         try {
-            if (withdrawChoice.equals("1")) {
-                setupData.debitBalance(activeAccount.getAccountNumber(), 10);
-                showSummaryScreen(10, setupData.getAccountByAccountNumber(activeAccount.getAccountNumber()).getBalance());
-            } else if (withdrawChoice.equals("2")) {
-                setupData.debitBalance(activeAccount.getAccountNumber(), 50);
-                showSummaryScreen(50, setupData.getAccountByAccountNumber(activeAccount.getAccountNumber()).getBalance());
-            } else if (withdrawChoice.equals("3")) {
-                setupData.debitBalance(activeAccount.getAccountNumber(), 100);
-                showSummaryScreen(100, setupData.getAccountByAccountNumber(activeAccount.getAccountNumber()).getBalance());
-            } else if (withdrawChoice.equals("4")) {
-                showOtherWithdrawAmount();
-            } else if (withdrawChoice.equals("") || withdrawChoice.equals("5")) {
-                showTransactionScreen();
+            switch (withdrawChoice) {
+                case "1":
+                    setupData.debitBalance(activeAccount.getAccountNumber(), 10);
+                    showSummaryScreen(10, setupData.getAccountByAccountNumber(activeAccount.getAccountNumber()).getBalance());
+                    break;
+                case "2":
+                    setupData.debitBalance(activeAccount.getAccountNumber(), 50);
+                    showSummaryScreen(50, setupData.getAccountByAccountNumber(activeAccount.getAccountNumber()).getBalance());
+                    break;
+                case "3":
+                    setupData.debitBalance(activeAccount.getAccountNumber(), 100);
+                    showSummaryScreen(100, setupData.getAccountByAccountNumber(activeAccount.getAccountNumber()).getBalance());
+                    break;
+                case "4":
+                    showOtherWithdrawAmount();
+                    break;
+                case "":
+                case "5":
+                    showTransactionScreen();
+                    break;
             }
         } catch (InsufficientBalanceException e) {
             System.out.println(e.getMessage());
@@ -115,7 +131,7 @@ public class Screens {
 
     private void showOtherWithdrawAmount() throws InsufficientBalanceException {
         System.out.println("\n----------\n");
-        System.out.println("Other Withdraw\n" +
+        System.out.print("Other Withdraw\n" +
                 "Enter amount to withdraw :");
         Scanner otherWithdrawAmount = new Scanner(System.in);
         String sWithdrawAmount = Utils.checkBlankInputString(otherWithdrawAmount);
@@ -143,7 +159,7 @@ public class Screens {
         showSummaryScreen(withdrawAmount, setupData.getAccountByAccountNumber(activeAccount.getAccountNumber()).getBalance());
     }
 
-    public void showTransferScreen() {
+    private void showTransferScreen() {
         System.out.println("\n----------\n");
         System.out.print("Please enter destination account and " +
                 "press enter to continue or \n" +
@@ -184,7 +200,7 @@ public class Screens {
         showTransferAmountScreen(destinationAccount, referenceNumber);
     }
 
-    public void showTransferAmountScreen(String destinationAccount, String referenceNumber) {
+    private void showTransferAmountScreen(String destinationAccount, String referenceNumber) {
         System.out.println("\n----------\n");
         System.out.print("Please enter transfer amount and press enter to continue or \n" +
                 "press enter to go back to Transaction: ");
@@ -209,21 +225,12 @@ public class Screens {
         } else {
             //valid amount do transfer
             float fTransferAmount = Float.parseFloat(tranferAmount);
-            try {
-                setupData.debitBalance(activeAccount.getAccountNumber(), fTransferAmount);
-                setupData.creditBalance(Integer.parseInt(destinationAccount), fTransferAmount);
-                // show transfer summary screen
-                Transfer transfer = new Transfer(Integer.parseInt(destinationAccount), fTransferAmount, referenceNumber, activeAccount.getAccountNumber());
-                showFundTransferSummaryScreen(transfer);
-            } catch (InsufficientBalanceException e) {
-                // insufficient balance
-                System.out.println("Insufficient balance $" + fTransferAmount);
-                showTransferAmountScreen(destinationAccount, referenceNumber);
-            }
+            Transfer transfer = new Transfer(Integer.parseInt(destinationAccount), fTransferAmount, referenceNumber, activeAccount.getAccountNumber());
+            showConfirmationTransferScreen(transfer);
         }
     }
 
-    public void showSummaryScreen(float withdrawAmount, float balance) {
+    private void showSummaryScreen(float withdrawAmount, float balance) {
         System.out.println("\n----------\n");
         System.out.println("Summary");
         System.out.println("Date : " + new Timestamp(new Date().getTime()));
@@ -244,7 +251,44 @@ public class Screens {
         }
     }
 
-    public void showFundTransferSummaryScreen(Transfer transfer) {
+    private void showConfirmationTransferScreen(Transfer transfer) {
+        System.out.println("\n----------\n");
+        System.out.print("Transfer Confirmation\n" +
+                "Destination Account : " + transfer.getDestinationAccount() + "\n" +
+                "Transfer Amount     : " + transfer.getTransferAmount() + "\n" +
+                "Reference Number    : " + transfer.getReferenceNumber() + "\n\n" +
+                "1. Confirm Trx\n" +
+                "2. Cancel Trx\n\n" +
+                "Choose option[2]: ");
+
+        Scanner transferConfirmationScanner = new Scanner(System.in);
+        String confirmationChoice = Utils.checkBlankInputString(transferConfirmationScanner);
+
+        switch (confirmationChoice) {
+            case "1":
+                doTransfer(transfer);
+                break;
+            case "":
+            case "2":
+                showAuthScreen();
+                break;
+        }
+    }
+
+    private void doTransfer(Transfer transfer) {
+        try {
+            setupData.debitBalance(activeAccount.getAccountNumber(), transfer.getTransferAmount());
+            setupData.creditBalance(transfer.getDestinationAccount(), transfer.getTransferAmount());
+            // show transfer summary screen
+            showFundTransferSummaryScreen(transfer);
+        } catch (InsufficientBalanceException e) {
+            // insufficient balance
+            System.out.println("Insufficient balance $" + transfer.getTransferAmount());
+            showTransferAmountScreen(String.valueOf(transfer.getDestinationAccount()), transfer.getReferenceNumber());
+        }
+    }
+
+    private void showFundTransferSummaryScreen(Transfer transfer) {
         float accountBalance = setupData.getAccountByAccountNumber(activeAccount.getAccountNumber()).getBalance();
         System.out.print("Fund Transfer Summary\n" +
                 "Destination Account : " + transfer.getDestinationAccount() + "\n" +
@@ -264,7 +308,7 @@ public class Screens {
 
         //exit the app
         if (optionChoice.equals("") || optionChoice.equals("2")) {
-            System.exit(0);
+            showAuthScreen();
         }
     }
 }

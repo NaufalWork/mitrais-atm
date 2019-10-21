@@ -12,6 +12,7 @@ public class Application {
 
         Screens screens = new Screens(setupData);
 
+        //show the auth screen first
         screens.showAuthScreen();
     }
 }
