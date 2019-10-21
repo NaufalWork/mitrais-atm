@@ -23,9 +23,28 @@ public class Utils {
         }
     }
 
-    public static String get6RandomNumber(){
+    public static String get6RandomNumber() {
         Random rnd = new Random();
         int number = rnd.nextInt(999999);
         return String.format("%06d", number);
+    }
+
+    public static boolean has6digit(String input) {
+        return input.length() == 6;
+    }
+
+    public static boolean isMaxWithdrawAmount(float amount) {
+        return amount > 1000;
+    }
+
+    public static boolean isMultipleOf10(float amount) {
+        if (amount < 10) {
+            return false;
+        }
+        return amount % 10 == 0;
+    }
+
+    public static boolean isMinimumTransferAmount(float amout){
+        return amout >= 1;
     }
 }
