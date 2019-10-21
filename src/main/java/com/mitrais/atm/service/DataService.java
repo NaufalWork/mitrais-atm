@@ -1,13 +1,13 @@
-package com.mitrais.atm;
+package com.mitrais.atm.service;
 
-import com.mitrais.atm.exceptions.InsufficientBalanceException;
+import com.mitrais.atm.exception.InsufficientBalanceException;
 import com.mitrais.atm.model.Account;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SetupData {
-    private List<Account> accountList = new ArrayList<Account>();
+public class DataService {
+    private List<Account> accountList = new ArrayList<>();
 
     public void addAccount(Account account) {
         accountList.add(account);

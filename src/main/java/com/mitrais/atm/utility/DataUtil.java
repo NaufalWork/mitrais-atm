@@ -1,9 +1,9 @@
-package com.mitrais.atm;
+package com.mitrais.atm.utility;
 
 import java.util.Random;
 import java.util.Scanner;
 
-public class Utils {
+public class DataUtil {
     public static String checkBlankInputString(Scanner sc) {
         String value = sc.nextLine().trim();
         return value.length() == 0 ? "" : value;

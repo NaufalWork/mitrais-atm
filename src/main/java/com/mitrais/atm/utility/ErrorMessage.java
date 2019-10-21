@@ -1,6 +1,6 @@
-package com.mitrais.atm;
+package com.mitrais.atm.utility;
 
-public class Errors {
+public class ErrorMessage {
     public static String ACCOUNT_6_DIGIT = "\nAccount Number should have 6 digits length";
     public static String ACCOUNT_ONLY_NUMBER = "\nAccount Number should only contains numbers";
     public static String PIN_6_DIGIT = "\nPIN should have 6 digits length";

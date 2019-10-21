@@ -1,4 +1,4 @@
-package com.mitrais.atm.exceptions;
+package com.mitrais.atm.exception;
 
 public class InsufficientBalanceException extends Exception {
     public InsufficientBalanceException() {

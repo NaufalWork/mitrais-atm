@@ -1,14 +1,16 @@
 package com.mitrais.atm;
 
 import com.mitrais.atm.model.Account;
+import com.mitrais.atm.service.AccountService;
+import com.mitrais.atm.service.DataService;
+import com.mitrais.atm.utility.FileUtil;
 
 public class Application {
 
     public static void main(String[] args) {
         // setting up data first
-        SetupData setupData = new SetupData();
-        setupData.addAccount(new Account(" John Doe", "000000", 100, 112233));
-        setupData.addAccount(new Account("Jane Doe", "000000", 30, 112244));
+        AccountService accountService = new AccountService(FileUtil.getResourcePath() + "\\");
+        DataService setupData = accountService.getDataService();
 
         Screens screens = new Screens(setupData);
 
