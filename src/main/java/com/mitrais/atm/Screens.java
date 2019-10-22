@@ -90,6 +90,15 @@ class Screens {
         }
     }
 
+    private void withdrawBalance(float amount){
+        if (accountService.withdrawBalance(
+                activeAccount.getAccountNumber(), amount)) {
+            showSummaryScreen(amount, accountService.getAccount(activeAccount.getAccountNumber()).getBalance());
+        } else {
+            showTransactionScreen();
+        }
+    }
+
     private void showWithdrawScreen() {
         System.out.println("\n----------\n");
         System.out.println("Withdrawal\n");
@@ -104,41 +113,27 @@ class Screens {
 
         String withdrawChoice = DataUtil.checkBlankInputString(withdrawScanner);
 
-        try {
-            switch (withdrawChoice) {
-                case "1":
-                    if (accountService.withdrawBalance(
-                            activeAccount.getAccountNumber(), 10)) {
-                        showSummaryScreen(10, accountService.getAccount(activeAccount.getAccountNumber()).getBalance());
-                    }
-                    break;
-                case "2":
-                    if (accountService.withdrawBalance(
-                            activeAccount.getAccountNumber(), 50)) {
-                        showSummaryScreen(50, accountService.getAccount(activeAccount.getAccountNumber()).getBalance());
-                    }
-                    break;
-                case "3":
-                    if (accountService.withdrawBalance(
-                            activeAccount.getAccountNumber(), 100)) {
-                        showSummaryScreen(100, accountService.getAccount(activeAccount.getAccountNumber()).getBalance());
-                    }
-                    break;
-                case "4":
-                    showOtherWithdrawAmount();
-                    break;
-                case "":
-                case "5":
-                    showTransactionScreen();
-                    break;
-            }
-        } catch (InsufficientBalanceException e) {
-            System.out.println(e.getMessage());
-            showTransactionScreen();
+        switch (withdrawChoice) {
+            case "1":
+                withdrawBalance(10);
+                break;
+            case "2":
+                withdrawBalance(50);
+                break;
+            case "3":
+                withdrawBalance(100);
+                break;
+            case "4":
+                showOtherWithdrawAmount();
+                break;
+            case "":
+            case "5":
+                showTransactionScreen();
+                break;
         }
     }
 
-    private void showOtherWithdrawAmount() throws InsufficientBalanceException {
+    private void showOtherWithdrawAmount() {
         System.out.println("\n----------\n");
         System.out.print("Other Withdraw\n" +
                 "Enter amount to withdraw :");
@@ -287,16 +282,16 @@ class Screens {
     }
 
     private void doTransfer(Transfer transfer) {
-            boolean transferProcess = accountService.transferBalance(
-                    transfer.getSourceAccout(), transfer.getDestinationAccount(), transfer.getTransferAmount());
-            if (transferProcess) {
-                // show transfer summary screen
-                showFundTransferSummaryScreen(transfer);
-            } else {
-                // insufficient balance
-                System.out.println("Insufficient balance $" + transfer.getTransferAmount());
-                showTransferAmountScreen(String.valueOf(transfer.getDestinationAccount()), transfer.getReferenceNumber());
-            }
+        boolean transferProcess = accountService.transferBalance(
+                transfer.getSourceAccout(), transfer.getDestinationAccount(), transfer.getTransferAmount());
+        if (transferProcess) {
+            // show transfer summary screen
+            showFundTransferSummaryScreen(transfer);
+        } else {
+            // insufficient balance
+            System.out.println("Insufficient balance $" + transfer.getTransferAmount());
+            showTransferAmountScreen(String.valueOf(transfer.getDestinationAccount()), transfer.getReferenceNumber());
+        }
     }
 
     private void showFundTransferSummaryScreen(Transfer transfer) {

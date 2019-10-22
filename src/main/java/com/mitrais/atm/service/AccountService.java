@@ -43,7 +43,7 @@ public class AccountService {
             accountDAO.debitBalance(accountNumber, withdrawAmount);
             return true;
         } catch (InsufficientBalanceException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
             return false;
         }
     }
@@ -58,6 +58,7 @@ public class AccountService {
                                    float transferAmount) {
         try {
             accountDAO.debitBalance(sourceAccount, transferAmount);
+            accountDAO.creditBalance(destinationAccount, transferAmount);
             return true;
         } catch (InsufficientBalanceException e) {
             System.out.println(e.getLocalizedMessage());
