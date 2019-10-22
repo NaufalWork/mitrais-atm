@@ -1,9 +1,9 @@
 package com.mitrais.atm;
 
 import com.mitrais.atm.exception.InsufficientBalanceException;
-import com.mitrais.atm.model.Account;
+import com.mitrais.atm.model.account.Account;
 import com.mitrais.atm.model.Transfer;
-import com.mitrais.atm.service.DataService;
+import com.mitrais.atm.service.AccountService;
 import com.mitrais.atm.utility.ErrorMessage;
 import com.mitrais.atm.utility.DataUtil;
 
@@ -12,11 +12,11 @@ import java.util.Date;
 import java.util.Scanner;
 
 class Screens {
-    private DataService setupData;
+    private AccountService accountService;
     private Account activeAccount;
 
-    Screens(DataService setupData) {
-        this.setupData = setupData;
+    Screens() {
+        this.accountService = AccountService.getInstance();
     }
 
     void showAuthScreen() {
@@ -51,7 +51,7 @@ class Screens {
             showAuthScreen();
         }
 
-        Account userAccount = setupData.loginAccount(Integer.parseInt(userAccountNumber), userPin);
+        Account userAccount = accountService.authenticateUser(Integer.parseInt(userAccountNumber), userPin);
         if (userAccount != null) {
             activeAccount = userAccount;
             showTransactionScreen();
@@ -107,16 +107,22 @@ class Screens {
         try {
             switch (withdrawChoice) {
                 case "1":
-                    setupData.debitBalance(activeAccount.getAccountNumber(), 10);
-                    showSummaryScreen(10, setupData.getAccountByAccountNumber(activeAccount.getAccountNumber()).getBalance());
+                    if (accountService.withdrawBalance(
+                            activeAccount.getAccountNumber(), 10)) {
+                        showSummaryScreen(10, accountService.getAccount(activeAccount.getAccountNumber()).getBalance());
+                    }
                     break;
                 case "2":
-                    setupData.debitBalance(activeAccount.getAccountNumber(), 50);
-                    showSummaryScreen(50, setupData.getAccountByAccountNumber(activeAccount.getAccountNumber()).getBalance());
+                    if (accountService.withdrawBalance(
+                            activeAccount.getAccountNumber(), 50)) {
+                        showSummaryScreen(50, accountService.getAccount(activeAccount.getAccountNumber()).getBalance());
+                    }
                     break;
                 case "3":
-                    setupData.debitBalance(activeAccount.getAccountNumber(), 100);
-                    showSummaryScreen(100, setupData.getAccountByAccountNumber(activeAccount.getAccountNumber()).getBalance());
+                    if (accountService.withdrawBalance(
+                            activeAccount.getAccountNumber(), 100)) {
+                        showSummaryScreen(100, accountService.getAccount(activeAccount.getAccountNumber()).getBalance());
+                    }
                     break;
                 case "4":
                     showOtherWithdrawAmount();
@@ -158,8 +164,10 @@ class Screens {
             showOtherWithdrawAmount();
         }
 
-        setupData.debitBalance(activeAccount.getAccountNumber(), withdrawAmount);
-        showSummaryScreen(withdrawAmount, setupData.getAccountByAccountNumber(activeAccount.getAccountNumber()).getBalance());
+        boolean withdrawProcess = accountService.withdrawBalance(activeAccount.getAccountNumber(), withdrawAmount);
+        if (withdrawProcess) {
+            showSummaryScreen(withdrawAmount, accountService.getAccount(activeAccount.getAccountNumber()).getBalance());
+        }
     }
 
     private void showTransferScreen() {
@@ -179,7 +187,7 @@ class Screens {
             showTransferScreen();
         }
 
-        Account acc = setupData.getAccountByAccountNumber(Integer.parseInt(destinationAccount));
+        Account acc = accountService.getAccount(Integer.parseInt(destinationAccount));
 
         //checks if the destination is correct
         if (acc == null || !DataUtil.isNumeric(destinationAccount)) {
@@ -279,20 +287,20 @@ class Screens {
     }
 
     private void doTransfer(Transfer transfer) {
-        try {
-            setupData.debitBalance(activeAccount.getAccountNumber(), transfer.getTransferAmount());
-            setupData.creditBalance(transfer.getDestinationAccount(), transfer.getTransferAmount());
-            // show transfer summary screen
-            showFundTransferSummaryScreen(transfer);
-        } catch (InsufficientBalanceException e) {
-            // insufficient balance
-            System.out.println("Insufficient balance $" + transfer.getTransferAmount());
-            showTransferAmountScreen(String.valueOf(transfer.getDestinationAccount()), transfer.getReferenceNumber());
-        }
+            boolean transferProcess = accountService.transferBalance(
+                    transfer.getSourceAccout(), transfer.getDestinationAccount(), transfer.getTransferAmount());
+            if (transferProcess) {
+                // show transfer summary screen
+                showFundTransferSummaryScreen(transfer);
+            } else {
+                // insufficient balance
+                System.out.println("Insufficient balance $" + transfer.getTransferAmount());
+                showTransferAmountScreen(String.valueOf(transfer.getDestinationAccount()), transfer.getReferenceNumber());
+            }
     }
 
     private void showFundTransferSummaryScreen(Transfer transfer) {
-        float accountBalance = setupData.getAccountByAccountNumber(activeAccount.getAccountNumber()).getBalance();
+        float accountBalance = accountService.getAccount(activeAccount.getAccountNumber()).getBalance();
         System.out.print("Fund Transfer Summary\n" +
                 "Destination Account : " + transfer.getDestinationAccount() + "\n" +
                 "Transfer Amount     : " + transfer.getTransferAmount() + "\n" +

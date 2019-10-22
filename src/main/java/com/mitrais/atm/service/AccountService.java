@@ -1,103 +1,67 @@
 package com.mitrais.atm.service;
 
-import com.mitrais.atm.exception.MultipleAccountNumberException;
-import com.mitrais.atm.model.Account;
+import com.mitrais.atm.exception.InsufficientBalanceException;
+import com.mitrais.atm.model.account.Account;
+import com.mitrais.atm.model.account.AccountDAOImpl;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AccountService {
+    private AccountDAOImpl accountDAO;
 
-    public static final String ACCOUNT_FILE_SUFFIX = "account.csv";
-    public static final String ACCOUNT_FILE_SUFFIX_TEMP = "account_temp.csv";
+    private static AccountService singleInstance = null;
 
-    private DataService dataService = new DataService();
-    private String dbFilePath;
+    private AccountService() {
+        this.accountDAO = AccountDAOImpl.getInstance();
+    }
 
-    public AccountService(String dbFilePath) {
-        this.dbFilePath = dbFilePath;
+    public static AccountService getInstance() {
+        if (singleInstance == null) singleInstance = new AccountService();
+        return singleInstance;
+    }
+
+    public void registerAccount(Account account) {
+        accountDAO.registerAccount(account);
+    }
+
+    public Account authenticateUser(int accountNumber, String pin) {
+        return accountDAO.authenticateUser(accountNumber, pin);
+    }
+
+    public Account getAccount(int accountNumber){
+        return accountDAO.getAccountDetail(accountNumber);
+    }
+
+    /**
+     * @param accountNumber
+     * @param withdrawAmount
+     * @return withdraw status, if true meaning it's successful otherwise failed
+     */
+    public boolean withdrawBalance(int accountNumber, float withdrawAmount) {
         try {
-            this.registerToDataService();
-            this.updateBalanceToFile(112233, 868686);
-        } catch (IOException | MultipleAccountNumberException e) {
+            accountDAO.debitBalance(accountNumber, withdrawAmount);
+            return true;
+        } catch (InsufficientBalanceException e) {
             e.printStackTrace();
-            System.exit(1);
+            return false;
         }
-    }
-
-    private String csvParserForAccount(Account account) {
-        return account.getName() + "," + account.getPin() + "," + account.getBalance() + "," + account.getAccountNumber();
-    }
-
-    private Account accountParser(String csvLine) {
-        String[] arrAccountDetail = csvLine.split(",");
-        String accountName = arrAccountDetail[0];
-        String accountPin = arrAccountDetail[1];
-        String accountBalance = arrAccountDetail[2];
-        String accountNumber = arrAccountDetail[3];
-
-        return new Account(
-                accountName, accountPin,
-                Float.parseFloat(accountBalance), Integer.parseInt(accountNumber));
     }
 
     /**
-     * register all data from csv to data service
+     * @param sourceAccount
+     * @param destinationAccount
+     * @param transferAmount
+     * @return transfer status, if true meaning it's successful otherwise failed
      */
-    private void registerToDataService() throws IOException, MultipleAccountNumberException {
-        BufferedReader accountBuffer = new BufferedReader(new FileReader(dbFilePath + ACCOUNT_FILE_SUFFIX));
-        List<String> accountNumberTemp = new ArrayList<>();
-        String line;
-        while ((line = accountBuffer.readLine()) != null) {// read each line of csv file
-
-            Account account = accountParser(line);
-
-            /* check if there is duplicate account number */
-            boolean isDuplicate = accountNumberTemp.contains(String.valueOf(account.getAccountNumber()));
-            if (isDuplicate) {
-                throw new MultipleAccountNumberException(); // throw exception if there is any duplication
-            }
-
-            accountNumberTemp.add(String.valueOf(account.getAccountNumber())); //add account number if there is no duplication
-
-            dataService.addAccount(account);
+    public boolean transferBalance(int sourceAccount, int destinationAccount,
+                                   float transferAmount) {
+        try {
+            accountDAO.debitBalance(sourceAccount, transferAmount);
+            return true;
+        } catch (InsufficientBalanceException e) {
+            System.out.println(e.getLocalizedMessage());
+            return false;
         }
-        accountBuffer.close();
-    }
-
-    /**
-     * this is kind of hack
-     * create new csv with updated data
-     * delete old csv rename new csv
-     */
-    public void updateBalanceToFile(int accountNumber, float newBalance) throws IOException {
-        FileWriter csvWriter = new FileWriter(dbFilePath + ACCOUNT_FILE_SUFFIX_TEMP);
-        BufferedReader readCsv = new BufferedReader(new FileReader(dbFilePath + ACCOUNT_FILE_SUFFIX));
-        String csvLine;
-        while ((csvLine = readCsv.readLine()) != null) {
-            Account account = accountParser(csvLine);
-            if (account.getAccountNumber() == accountNumber) { //manipulate data
-                account.setBalance(newBalance);
-            }
-
-            String newCsvLine = csvParserForAccount(account);
-            csvWriter.append(newCsvLine); //add to new line
-            csvWriter.write(System.getProperty("line.separator"));
-        }
-
-        csvWriter.flush();
-        csvWriter.close();
-        readCsv.close();
-
-        File oldCsv = new File(dbFilePath + ACCOUNT_FILE_SUFFIX);
-        oldCsv.delete();//delete old file
-
-        File newFile = new File(dbFilePath + ACCOUNT_FILE_SUFFIX_TEMP);
-        newFile.renameTo(new File(dbFilePath + ACCOUNT_FILE_SUFFIX)); //rename new file
-    }
-
-    public DataService getDataService() {
-        return dataService;
     }
 }

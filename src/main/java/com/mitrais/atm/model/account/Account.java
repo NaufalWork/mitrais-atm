@@ -1,4 +1,4 @@
-package com.mitrais.atm.model;
+package com.mitrais.atm.model.account;
 
 public class Account {
     private String name;
